@@ -92,14 +92,15 @@ int main(int argc, char **argv)
       ISitok.clear();
     }
   }
-  const char *Not_found = "HTTP/1.1 404 Not Found\r\n Content-Type: text/plain\r\n Content-Length: 3\r\n abc\rn\rn ";
-
+  const char *Not_found = "HTTP/1.1 404 Not Found\r\n\r\n";
+  const char *JUST_found = "HTTP/1.1 200 OK\r\n\r\n";
   std::string cheker = v1[0];
   int flag = 0;
+  int flag2 = 0;
 
   std::string s;
 
-  for (int i = 1; i < cheker.length(); i++)
+  for (int i = 1; i < cheker.length() - 1; i++)
   {
     if (cheker[i - 1] == 'o' && cheker[i] == '/')
     {
@@ -113,6 +114,16 @@ int main(int argc, char **argv)
         break;
     }
   }
+  for (int i = 1; i < cheker.length(); i++)
+  {
+    if (cheker[i] == '/' && cheker[i + 1] == ' ')
+    {
+
+      flag2 = 1;
+      break;
+    }
+    
+  }
 
   std::string response = "HTTP/1.1 200 OK\r\n";
   response += "Content-Type: text/plain\r\n";
@@ -122,11 +133,21 @@ int main(int argc, char **argv)
   response += s;
   response += "\r\n";
 
-  const char *res = response.c_str();
-
   if (flag == 1)
   {
     int bytes_sent = send(client_id, response.c_str(), strlen(response.c_str()), 0);
+    if (bytes_sent < 0)
+    {
+      std::cerr << "Failed to send response\n";
+    }
+    else
+    {
+      std::cout << "akj Response sent\n";
+    }
+  }
+  else if (flag2 == 1)
+  {
+    int bytes_sent = send(client_id, JUST_found, strlen(JUST_found), 0);
     if (bytes_sent < 0)
     {
       std::cerr << "Failed to send response\n";
