@@ -9,12 +9,18 @@
 #include <netdb.h>
 #include <vector>
 #include <thread>
+#include <filesystem>
+#include <fstream>
 
-void handle_Person(int client_id)
+const char *Not_found = "HTTP/1.1 404 Not Found\r\n\r\n";
+const char *JUST_found = "HTTP/1.1 200 OK\r\n\r\n";
+std::string get_check = "GET /user-agent HTTP/1.1";
+
+void handle_Person(int client_id, std::string file_path)
 {
   char Yehbufferhai[1024];
   memset(Yehbufferhai, 0, sizeof Yehbufferhai);
-
+  const char *message;
   int checking = read(client_id, Yehbufferhai, 1024);
   if (checking < 0)
   {
@@ -41,8 +47,6 @@ void handle_Person(int client_id)
   }
   v1.push_back(ISitok);
   ISitok.clear();
-  const char *Not_found = "HTTP/1.1 404 Not Found\r\n\r\n";
-  const char *JUST_found = "HTTP/1.1 200 OK\r\n\r\n";
 
   std::string cheker = v1[0];
   std::string User_agent;
@@ -55,8 +59,9 @@ void handle_Person(int client_id)
   }
 
   int flag2 = 0;
-  std::string get_check = "GET /user-agent HTTP/1.1";
+
   size_t found = cheker.find("echo");
+  size_t Filefound = cheker.find("files");
 
   if (found != std::string::npos)
   {
@@ -83,18 +88,12 @@ void handle_Person(int client_id)
     response += "\r\n\r\n";
     response += s;
     response += "\r\n";
-    const char *message = response.c_str();
+
     if (flag == 1)
     {
+      message = response.c_str();
       int bytes_sent = send(client_id, message, strlen(message), 0);
-      if (bytes_sent < 0)
-      {
-        std::cerr << "Failed to send response";
-      }
-      else
-      {
-        std::cout << "OK Response sent";
-      }
+      std::cout << "message sent";
       return;
     }
   }
@@ -123,23 +122,72 @@ void handle_Person(int client_id)
     response += "\r\n\r\n";
     response += s;
     response += "\r\n";
-    const char *message = response.c_str();
-    std::cout << s << std::endl;
 
     if (flag == 1)
     {
+      message = response.c_str();
       int bytes_sent = send(client_id, message, strlen(message), 0);
-      if (bytes_sent < 0)
-      {
-        std::cerr << "Failed to send response";
-      }
-      else
-      {
-        std::cout << "OK Response sent";
-      }
+      std::cout << "message sent";
       return;
     }
   }
+  else if (Filefound != std::string::npos)
+  {
+    int flag = 0;
+    std::string s;
+    for (int i = 1; i < cheker.length() - 1; i++)
+    {
+      if (flag == 1)
+      {
+        if (cheker[i] == ' ')
+          break;
+        s += cheker[i];
+      }
+      else if (cheker[i - 1] == 's' && cheker[i] == '/')
+      {
+
+        flag = 1;
+      }
+    }
+
+    std::string full_path = file_path += '/';
+    full_path += (s);
+
+    std::ifstream file(full_path);
+    if (file.is_open())
+    {
+      std::string file_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+      std::cout << file_content;
+
+      std::string response = "HTTP/1.1 200 OK\r\n";
+      response += "Content-Type: application/octet-stream\r\n";
+      response += "Content-Length: ";
+      response += std::to_string(file_content.length());
+      response += "\r\n\r\n";
+      response += file_content;
+      response += "\r\n";
+
+      if (flag == 1)
+      {
+        message = response.c_str();
+        int bytes_sent = send(client_id, message, strlen(message), 0);
+        std::cout << "message sent";
+        return;
+
+        file.close();
+      }
+    }
+    else
+    {
+      const char *response = "HTTP/1.1 404 NOT FOUND\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
+      int bytes_sent = send(client_id, response, strlen(response), 0);
+      std::cout << "message sent";
+      return;
+    }
+
+    file.close();
+  }
+
   else
   {
 
@@ -153,38 +201,23 @@ void handle_Person(int client_id)
       }
     }
 
-    if (flag2 == 1)
-    {
-      int bytes_sent = send(client_id, JUST_found, strlen(JUST_found), 0);
-      if (bytes_sent < 0)
-      {
-        std::cerr << "Failed to send response";
-      }
-      else
-      {
-        std::cout << "OK Response sent";
-      }
-    }
-    else
-    {
-      int bytes_sent = send(client_id, Not_found, strlen(Not_found), 0);
-      if (bytes_sent < 0)
-      {
-        std::cerr << "Failed to send response\n";
-      }
-      else
-      {
-        std::cout << "OK Response sent\n";
-      }
-      return;
-    }
+    message = (flag2 == 1) ? JUST_found : Not_found;
   }
+
+  int bytes_sent = send(client_id, message, strlen(message), 0);
+  std::cout << "message sent";
+  return;
+  std::cout << "message sent";
   return;
 }
 
 int main(int argc, char **argv)
 {
-
+  std::string file_path = "LMAO";
+  if (argc == 3 && strcmp(argv[1], "--directory") == 0)
+  {
+    file_path = argv[2];
+  }
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (server_fd < 0)
   {
@@ -234,7 +267,7 @@ int main(int argc, char **argv)
       break;
     }
 
-    CLIENTS.emplace_back(handle_Person, client_id);
+    CLIENTS.emplace_back(handle_Person, client_id, file_path);
   }
   for (auto &it : CLIENTS)
   {
