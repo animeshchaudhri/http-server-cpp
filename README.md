@@ -1,39 +1,50 @@
-[![progress-banner](https://backend.codecrafters.io/progress/http-server/6fa3dc5b-1a07-48d5-8a09-fa9f9c0c68e7)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# README.md
 
-This is a starting point for C++ solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+## Description
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+This is a simple C++ server program that listens for incoming connections and handles HTTP requests. It parses HTTP requests, extracts specific information, and sends appropriate responses based on the request content.
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
+## Requirements
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+- C++ compiler
+- POSIX-compliant operating system (e.g., Linux)
 
-# Passing the first stage
+## Dependencies
 
-The entry point for your HTTP server implementation is in `src/server.cpp`.
-Study and uncomment the relevant code, and push your changes to pass the first
-stage:
+- `iostream`
+- `cstdlib`
+- `string`
+- `cstring`
+- `unistd.h`
+- `sys/types.h`
+- `sys/socket.h`
+- `arpa/inet.h`
+- `netdb.h`
+- `vector`
+- `thread`
 
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
+## Usage
 
-Time to move on to the next stage!
+1. Compile the program using a C++ compiler:
+   ```bash
+   g++ server.cpp -o server
+   ```
+2. Run the compiled executable:
+   ```bash
+   ./server
+   ```
+3. The server will start listening for incoming connections on port 4221 by default.
 
-# Stage 2 & beyond
+## Functionality
 
-Note: This section is for stages 2 and beyond.
+- The server listens for incoming connections and handles each client connection in a separate thread.
+- It reads HTTP requests sent by clients and parses them to extract relevant information.
+- The server supports handling HTTP GET requests for `/user-agent`.
+- It sends appropriate HTTP responses based on the type of request received:
+  - If the request contains "echo" in the URL, it echoes back the specified content.
+  - If the request is a GET request for `/user-agent`, it sends back the User-Agent header value.
+  - For any other request, it sends a 404 Not Found response.
 
-1. Ensure you have `cmake` installed locally
-1. Run `./your_server.sh` to run your program, which is implemented in
-   `src/server.cpp`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+## License
+
+This project is licensed under the [MIT License](LICENSE).
