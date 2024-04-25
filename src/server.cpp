@@ -225,8 +225,6 @@ void handle_Person(int client_id, std::string file_path)
   int bytes_sent = send(client_id, message, strlen(message), 0);
 
   return;
-
-  return;
 }
 
 int main(int argc, char **argv)
