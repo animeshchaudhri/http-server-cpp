@@ -60,6 +60,7 @@ void handle_Person(int client_id, std::string file_path)
 
   int flag2 = 0;
 
+  size_t isitPost = cheker.find("POST");
   size_t found = cheker.find("echo");
   size_t Filefound = cheker.find("files");
 
@@ -93,7 +94,7 @@ void handle_Person(int client_id, std::string file_path)
     {
       message = response.c_str();
       int bytes_sent = send(client_id, message, strlen(message), 0);
-      std::cout << "message sent";
+
       return;
     }
   }
@@ -127,12 +128,13 @@ void handle_Person(int client_id, std::string file_path)
     {
       message = response.c_str();
       int bytes_sent = send(client_id, message, strlen(message), 0);
-      std::cout << "message sent";
+
       return;
     }
   }
   else if (Filefound != std::string::npos)
   {
+
     int flag = 0;
     std::string s;
     for (int i = 1; i < cheker.length() - 1; i++)
@@ -150,42 +152,58 @@ void handle_Person(int client_id, std::string file_path)
       }
     }
 
-    std::string full_path = file_path += '/';
-    full_path += (s);
-
-    std::ifstream file(full_path);
-    if (file.is_open())
+    if (isitPost != std::string::npos)
     {
-      std::string file_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-      std::cout << file_content;
 
-      std::string response = "HTTP/1.1 200 OK\r\n";
-      response += "Content-Type: application/octet-stream\r\n";
-      response += "Content-Length: ";
-      response += std::to_string(file_content.length());
-      response += "\r\n\r\n";
-      response += file_content;
-      response += "\r\n";
+      std::ofstream new_file(file_path + "/" + s);
+      std::string buff = v1[v1.size() - 1];
+      new_file << buff;
+      new_file.close();
+      std::string response = "HTTP/1.1 201 Created\r\n";
+      response += "Content-Length: 0\r\n\r\n";
+      const char *message = response.c_str();
+      int bytes_sent = send(client_id, message, strlen(message), 0);
 
-      if (flag == 1)
-      {
-        message = response.c_str();
-        int bytes_sent = send(client_id, message, strlen(message), 0);
-        std::cout << "message sent";
-        return;
-
-        file.close();
-      }
+      return;
     }
     else
     {
-      const char *response = "HTTP/1.1 404 NOT FOUND\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
-      int bytes_sent = send(client_id, response, strlen(response), 0);
-      std::cout << "message sent";
-      return;
-    }
+      std::string full_path = file_path += '/';
+      full_path += (s);
 
-    file.close();
+      std::ifstream file(full_path);
+      if (file.is_open())
+      {
+        std::string file_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        std::cout << file_content;
+
+        std::string response = "HTTP/1.1 200 OK\r\n";
+        response += "Content-Type: application/octet-stream\r\n";
+        response += "Content-Length: ";
+        response += std::to_string(file_content.length());
+        response += "\r\n\r\n";
+        response += file_content;
+        response += "\r\n";
+
+        if (flag == 1)
+        {
+          message = response.c_str();
+          int bytes_sent = send(client_id, message, strlen(message), 0);
+
+          return;
+
+          file.close();
+        }
+      }
+      else
+      {
+        const char *response = "HTTP/1.1 404 NOT FOUND\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
+        int bytes_sent = send(client_id, response, strlen(response), 0);
+
+        return;
+      }
+      file.close();
+    }
   }
 
   else
@@ -205,9 +223,9 @@ void handle_Person(int client_id, std::string file_path)
   }
 
   int bytes_sent = send(client_id, message, strlen(message), 0);
-  std::cout << "message sent";
+
   return;
-  std::cout << "message sent";
+
   return;
 }
 
